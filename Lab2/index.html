@@ -6,6 +6,7 @@
     </head>
     <body onload="main()">
         <h1>Lab #2 - 打字機消消樂</h1>
+        <p>說明：只能輸入小寫字母</p>
         <div id="container" tabindex="0" class="blockquote text-nowrap"></div>
         <script>
             var container = document.getElementById('container');
@@ -18,7 +19,8 @@
                     container.textContent = '';
                 } else if (e.key == 'Backspace') {
                     container.textContent = container.textContent.slice(0, -1);
-                } else {
+                    // detect a-z only, lowercase only
+                } else if (e.key.length == 1 && e.key.match(/[a-z]/)) {
                     if (e.key == container.textContent[0]) {
                         console.log('Matched: ' + e.key);
                         container.textContent = container.textContent.slice(1);
