@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HW#2</title>
+    <style>
+        #header {
+            cursor: pointer;
+        }
+        #header:hover {
+            color: green;
+        }
+        #search {
+            font-size: large;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            height: 4ch;
+        }
+        #instruction {
+            cursor: pointer;
+        }
+        #instruction span {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        #help {
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            height: 4ch;
+            display: inline-block;
+        }
+        #help:hover {
+            background-color: lightyellow;
+        }
+        #help-content {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            padding: 0px;
+            margin: 3px;
+            background-color: #f4f7eddb;
+        }
+        #help-content legend {
+            cursor: pointer;
+            margin-left: 1ch;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 0 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f4f3f3;
+        }
+        #help-content:hover {
+            background-color: #f8fddd;
+        }
+        #help-content legend:hover {
+            background-color: #fddddd;
+        }
+        #help-content legend input[type="button"] {
+            float: right;
+            margin-left: 1ch;
+            cursor: pointer;
+            font-weight: bold;
+            color: red;
+            font-size: 1em;
+            padding: 0.15ch 0.15ch 0.15ch 0.15ch;
+            line-height: 0.8em;
+            font-family: 'Courier New', Courier, monospace;
+            border-color: red;
+            align-items: center;
+        }
+        #heading {
+            display: flex;
+            align-items: center;
+        }
+        #heading * {
+            margin-right: 1ch;
+        }
+        #pagesetup {
+            width: 5ch;
+            font-size: 1.5em;
+        }
+        table {
+            font-family: Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+            padding: 10px;
+        }
+        th, td {
+            border: 1px #dddddd solid;
+            padding: 6px;
+        }
+        tr:nth-child(even) {
+            background-color: #f4f3f3;
+        }
+        tr:hover {
+            background-color: #ddd !important;
+        }
+        th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #04aa6d;
+            color: white;
+        }
+        th:nth-child(1), td:nth-child(1) {
+            width: 15%;
+            min-width: 6ch;
+        }
+        th:nth-child(2), td:nth-child(2) {
+            width: 10%;
+            min-width: 20ch;
+        }
+        th:nth-child(3), td:nth-child(3) {
+            width: 30%;
+            min-width: 5ch;
+        }
+        .nowrap, .nowrap label {
+            display: inline;
+            cursor: pointer;
+        }
+        .nowrap input[type="radio"] {
+            cursor: pointer;
+            margin: 0;
+        }
+    </style>
+    <script>
+    function init() {
+        var openUrl = "https://cloud.culture.tw/frontsite/trans/SearchShowAction.do?method=doFindTypeJ&category=6"
+        //var openUrl = "./SearchShowAction.json"
+        //var openUrl = "./SearchShowAction_2.json"
+        var xhr = new XMLHttpRequest();
+        var dataset;
+        xhr.open('GET', openUrl, true);
+        xhr.send();
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                dataset = JSON.parse(this.responseText);
+                addNewData();
+            }
+        }
+
+        var csie = document.getElementById('csie');
+        var search = document.getElementById('search');
+        var header = document.getElementById('header');
+        var instruction = document.getElementById('instruction');
+        var pagesetup = document.getElementById('pagesetup');
+        var pageinfo = document.getElementById('pageinfo');
+        var ipv = document.getElementById('ipv');
+        var ipvn_v = document.getElementById('ipv-n').childNodes[1];
+        var itemPerView = 10;
+        var ipv_min = 5;
+        var viewAll = false;
+        var lastShowItem = 0; // 1st of the last show item in the current page
+
+        ipvn_v.setAttribute('min', ipv_min);
+        ipvn_v.value = itemPerView;
+
+        pageinfo.addEventListener('click', function() {
+            this.setAttribute('hidden', '');
+            pagesetup.value = Math.ceil(parseInt(document.getElementById('page').innerText));
+            pagesetup.removeAttribute('hidden');
+            pagesetup.focus();
+            pagesetup.select();
+        });
+        pagesetup.addEventListener('keyup', function(e) {
+            if (e.keyCode === 13) {
+                pageSetup();
+            }
+        });
+        pagesetup.addEventListener('blur', pageSetup);
+        pagesetup.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            if (e.deltaY > 0) { // scroll down
+                pagesetup.value = parseInt(pagesetup.value) - 1;
+            } else {
+                pagesetup.value = parseInt(pagesetup.value) + 1;
+            }
+            if (parseInt(pagesetup.value) < 1) {
+                pagesetup.value = 1;
+            }
+            let totalpage = parseInt(document.getElementById('totalpage').innerText);
+            if (page > totalpage) {
+                pagesetup.value = totalpage;
+            }
+        });
+        function pageSetup() {
+            let page = parseInt(pagesetup.value);
+            let totalpage = parseInt(document.getElementById('totalpage').innerText);
+            if (page < 1) {
+                page = 1;
+            } else if (page > totalpage) {
+                page = totalpage;
+            }
+            showPages((page-1) * itemPerView + 1);
+            pagesetup.setAttribute('hidden', '');
+            pageinfo.removeAttribute('hidden');
+            lastShowItem = (page-1) * itemPerView + 1;
+        }
+
+        document.getElementById('ipv-all').addEventListener('click', function() {
+            this.querySelector('input').checked = true;
+            viewAll = true;
+            addNewData();
+        });
+        document.getElementById('ipv-n').addEventListener('wheel', function(e) {
+            this.querySelector('input').checked = true;
+            viewAll = false;
+            e.preventDefault();
+            if (e.deltaY > 0) { // scroll down
+                ipv.value = parseInt(ipv.value) - 1;
+            } else {
+                ipv.value = parseInt(ipv.value) + 1;
+            }
+            if (parseInt(ipv.value) < ipv_min) {
+                ipv.value = ipv_min;
+            }
+        });
+        document.getElementById('ipv-n').addEventListener('mouseout', function() {
+            this.querySelector('input').checked = true;
+            viewAll = false;
+            addNewData();
+        });
+        document.getElementById('ipv-n').addEventListener('blur', function() {
+            this.querySelector('input').checked = true;
+            viewAll = false;
+            addNewData();
+        });
+        document.getElementById('ipv').addEventListener('click', function() {
+            this.parentElement.querySelector('input').checked = true;
+            this.focus();
+            this.select();
+            viewAll = false;
+            addNewData();
+        });
+
+        header.addEventListener('click', function(e) {
+            switch (e.target.id) {
+                case 'header':
+                    if (e.target.style.color === 'red') {
+                        e.target.style.color = '';
+                        instruction.hidden = true;
+                    } else {
+                        e.target.style.color = 'red';
+                        instruction.hidden = false;
+                    }
+                    break;
+            }
+        });
+        
+        instruction.addEventListener('click', function() {
+            instruction.hidden = true;
+            header.style.color = '';
+        });
+        
+        document.getElementById('help').addEventListener('click', function() {
+            let helpContent = document.getElementById('help-content');
+            if (helpContent.hidden) {
+                helpContent.removeAttribute('hidden');
+            } else {
+                helpContent.setAttribute('hidden', '');
+            }
+            this.style.display = 'none';
+        });
+        document.getElementById('help-content').querySelector('legend').addEventListener('click', function() {
+            this.parentElement.setAttribute('hidden', '');
+            document.getElementById('help').style.removeProperty('display');
+        });
+
+        search.addEventListener("mouseover", function() {
+            this.style.backgroundColor = 'lightyellow';
+            this.focus();
+            this.select();
+        });
+        search.addEventListener("mouseout", function() {
+            this.style.backgroundColor = 'white';
+        });
+        search.addEventListener("keydown", function(e) {
+            if (event.keyCode === 27) { // ESC key = clear input
+                this.value = '';
+                this.blur();
+                addNewData();
+            } else {
+                e.stopPropagation();
+            }
+        });
+        search.addEventListener("input", addNewData);
+        search.addEventListener("change", addNewData);
+
+        prev.addEventListener("click", prevPage);
+        next.addEventListener("click", nextPage);
+        window.addEventListener("keydown", function(e) {
+            switch (e.keyCode) {
+                case 37: // left arrow
+                case 33: // page up
+                    prevPage();
+                    break;
+                case 39: // right arrow
+                case 34: // page down
+                    nextPage();
+                    break;
+            }
+        })
+
+        function addNewData() {
+            let keys = search.value.split(' ');
+            // remove all rows (except the 1st row)
+            while (csie.rows.length > 1) {
+                csie.deleteRow(1);
+            }
+            dataset.forEach(function(data, index) {
+                let found = true;
+                for (let i = 0; i < keys.length; i++) {
+                    if (!data['title'].includes(keys[i])) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (!found) {
+                    return;
+                }
+                let row = csie.insertRow(-1); // -1 means insert at last row
+                if (!viewAll) {
+                    row.setAttribute('hidden',''); // hide all rows at first
+                }
+                row.insertCell(0).innerHTML = data['title'];
+                row.insertCell(1).innerHTML = data['showInfo'][0]['location'];
+                row.insertCell(2).innerHTML = data['showInfo'][0]['price'];
+            });
+            if (csie.rows.length === 1) {
+                return;
+            }
+            checkIPV();
+            let start = 1; lastShowItem = start;
+            document.getElementById('totalpage').innerText = Math.ceil((csie.rows.length-1) / itemPerView);
+            showPages(start);
+            checkPageButton();
+        }
+
+        function showPages(startItem) {
+            let rows = csie.rows;
+            for (let i = lastShowItem; i < Math.min(lastShowItem+itemPerView,csie.rows.length); i++) {
+                rows[i].setAttribute('hidden', '');
+            }
+            for (let i = startItem; i < Math.min(startItem+itemPerView,csie.rows.length); i++) {
+                rows[i].removeAttribute('hidden');
+            }
+            lastShowItem = startItem;
+            document.getElementById('page').innerText = Math.ceil(startItem / itemPerView);
+            checkPageButton();
+        }
+
+        function prevPage() {
+            console.log('prev triggered');
+            if (lastShowItem == 1) {
+                return;
+            } else {
+                showPages(lastShowItem - itemPerView);
+            }
+        }
+
+        function nextPage() {
+            console.log('next triggered');
+            if (lastShowItem >= csie.rows.length-1 - itemPerView) {
+                return;
+            } else {
+                showPages(lastShowItem + itemPerView);
+            }
+        }
+
+        function checkPageButton() { // if current page is bounded, then disable prev/next button
+            if (lastShowItem == 1) {
+                prev.disabled = true;
+            } else {
+                prev.disabled = false;
+            }
+            if (lastShowItem >= csie.rows.length - itemPerView) {
+                next.disabled = true;
+            } else {
+                next.disabled = false;
+            }
+        }
+
+        function checkIPV() {
+            if (viewAll) {
+                itemPerView = csie.rows.length - 1;
+            } else {
+                itemPerView = parseInt(ipv.value);
+                if (itemPerView < ipv_min) {
+                    ipv.value = ipv_min;
+                    itemPerView = ipv_min;
+                }
+            }
+        }
+    }
+    </script>
+</head>
+<body onload="init()">
+    <ul id="instruction" hidden>
+        <span>HW#2 - Deadline: 2024/04/02 23:59</span>
+        <li>Ajax & Table update & 分⾴功能和搜尋</li>
+        <li>修改 Page 51 ⾴範例</li>
+        <li>增加 上⼀⾴、下⼀⾴、⽬前第幾⾴、總共幾⾴
+            <ul>
+                <li>每⾴⼗筆資料</li>
+                <li>⽬前第幾⾴、總共幾⾴要根據呈現資料變動</li>
+            </ul>
+        </li>
+        <li>名稱搜尋功能
+            <ul>
+                <li>只呈現 (名稱資訊) 和關鍵字相關的資料</li>
+                <li>Onchange event</li>
+            </ul>
+        </li>
+    </ul>
+    <header id="heading">
+        <h1 id="header">景點觀光展覽資訊</h1>
+        <input type="text" id="search" placeholder="請輸入關鍵字">
+        <input type="button" id="help" value="操作說明與設定">
+        <fieldset id="help-content" hidden>
+            <legend>操作說明與設定 <input type="button" value="&times;"></legend>
+            <ul>
+                <li><strong>看前一頁</strong>鍵盤左鍵 ←、上一頁 Page Up</li>
+                <li><strong>看下一頁</strong>鍵盤右鍵 →、下一頁 Page Down</li>
+                <li><strong>編輯搜尋</strong>在搜尋框按下 ESC 鍵清除全部關鍵字、或使用倒退鍵逐一修改</li>
+                <li><strong>多重關鍵字搜尋</strong>以空白分隔</li>
+                <li><strong>指定瀏覽的頁數</strong>直接「點選」頁數，進行手動輸入修改，按下 Enter 即可</li>
+                <li><strong>每個分頁顯示</strong>
+                    <div id="ipv-all" class="nowrap"><input type="radio" name="ipv"><label for="ipv-all">全部</label></div>
+                    <div id="ipv-n" class="nowrap"><input type="radio" name="ipv" checked><input type="number" min="10" id="ipv" value="10"></div>
+                    筆資料
+                </li>
+            </ul>
+        </fieldset>
+    </header>
+    <table id="csie">
+        <tr>
+            <th>名稱</th>
+            <th>地點</th>
+            <th>票價</th>
+        </tr>
+    </table>
+    <input type="button" value="上一頁" id="prev"></input>
+    <span id="pageinfo"> <span id="page"></span> / <span id="totalpage"></span> 頁 </span>
+    <input type="number" id="pagesetup" hidden>
+    <input type="button" value="下一頁" id="next"></input>
+</body>
+</html>
