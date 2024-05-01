@@ -12,6 +12,7 @@ import Grid from '@mui/material/Grid';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Lighthouse from './Lighthouse.jpg';
 
 function Copyright(props) {
   return (
@@ -50,8 +51,8 @@ export default function CGU_Login() {
           sm={4}
           md={7}
           sx={{
-            backgroundImage: 'url(https://th.bing.com/th/id/OIP.MWuJIYHNO6MTAL3axWiRHgHaLE?rs=1&pid=ImgDetMain)',
-            // backgroundImage: 'file(./Lighthouse.jpg)',
+            // backgroundImage: 'url(https://th.bing.com/th/id/OIP.MWuJIYHNO6MTAL3axWiRHgHaLE?rs=1&pid=ImgDetMain)',
+            backgroundImage: `url(${Lighthouse})`,
             backgroundRepeat: 'no-repeat',
             backgroundColor: (t) =>
               t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
@@ -73,7 +74,7 @@ export default function CGU_Login() {
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
-              Sign in
+              登入
             </Typography>
             <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1 }}>
               <TextField
@@ -81,7 +82,7 @@ export default function CGU_Login() {
                 required
                 fullWidth
                 id="email"
-                label="Email Address"
+                label="電子信箱地址"
                 name="email"
                 autoComplete="email"
                 autoFocus
@@ -91,14 +92,14 @@ export default function CGU_Login() {
                 required
                 fullWidth
                 name="password"
-                label="Password"
+                label="密碼"
                 type="password"
                 id="password"
                 autoComplete="current-password"
               />
               <FormControlLabel
                 control={<Checkbox value="remember" color="primary" />}
-                label="Remember me"
+                label="記住我"
               />
               <Button
                 type="submit"
@@ -106,7 +107,7 @@ export default function CGU_Login() {
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
               >
-                Sign In
+                登入
               </Button>
               <Grid container>
                 <Grid item xs>
