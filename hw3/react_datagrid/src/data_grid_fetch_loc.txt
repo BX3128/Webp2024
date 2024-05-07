@@ -1,0 +1,11 @@
+  useEffect(() => {
+    const fetchedData = DataJson_loc.map((data, index) => {
+      return {
+        id: index,
+        title: data['title'],
+        location: data['showInfo'][0]['location'],
+        price: data['showInfo'][0]['price'],
+      };
+    });
+    setRows(fetchedData);
+  }, []);
